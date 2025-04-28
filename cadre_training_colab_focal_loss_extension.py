@@ -63,6 +63,7 @@ def preprocess_cadre_data(input_dir, repository="gdsc"):
 # Simple collaborative filtering model with contextual attention (inspired by CADRE)
 ##############################################################################
 class ContextualAttentionCF(nn.Module):
+
     def __init__(self, omic_dim, drug_dim, hidden_dim=192, dropout=0.4):
         super().__init__()
         self.omic_encoder = nn.Sequential(
@@ -123,8 +124,8 @@ class FocalLoss(nn.Module):
             elements in the output, 'sum': the output will be summed. Default: 'mean'
     """
 
-    def __init__(self, gamma: float = 2.0, alpha: float = 0.25, reduction: str = 'mean') -> None: 
-        super().__init__()
+    def init(self, gamma: float = 2.0, alpha: float = 0.25, reduction: str = 'mean') -> None: 
+        super().init()
         self.gamma = gamma
         self.alpha = alpha
         self.reduction = reduction
@@ -163,6 +164,7 @@ class FocalLoss(nn.Module):
             return torch.sum(focal_loss)
         else:
             return focal_loss
+          
 #######################################
 # Training and evaluation logic
 #######################################
