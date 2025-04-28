@@ -63,7 +63,7 @@ def preprocess_cadre_data(input_dir, repository="gdsc"):
 # Simple collaborative filtering model with contextual attention (inspired by CADRE)
 ##############################################################################
 class ContextualAttentionCF(nn.Module):
-    def __init__(self, omic_dim, drug_dim, hidden_dim=128, dropout=0.5):
+    def __init__(self, omic_dim, drug_dim, hidden_dim=192, dropout=0.4):
         super().__init__()
         self.omic_encoder = nn.Sequential(
             nn.Linear(omic_dim, hidden_dim),
@@ -123,7 +123,7 @@ class FocalLoss(nn.Module):
             elements in the output, 'sum': the output will be summed. Default: 'mean'
     """
 
-    def __init__(self, gamma: float = 2.0, alpha: float = 0.25, reduction: str = 'mean') -> None:
+    def __init__(self, gamma: float = 2.0, alpha: float = 0.25, reduction: str = 'mean') -> None: 
         super().__init__()
         self.gamma = gamma
         self.alpha = alpha
@@ -144,17 +144,18 @@ class FocalLoss(nn.Module):
         input = torch.clamp(input, 1e-7, 1 - 1e-7)
 
         # Calculate cross-entropy loss
-        cross_entropy_loss = F.binary_cross_entropy(input, target, reduction='none')
+        cross_entropy_loss = F.cross_entropy(input, target, reduction='none')
+
+        pt=torch.exp(-cross_entropy_loss)
 
         # Calculate the modulating factor
-        p_t = target * input + (1 - target) * (1 - input)
-        modulating_factor = (1 - p_t).pow(self.gamma)
+        modulating_factor = (1 - pt).pow(self.gamma)
 
         # Apply alpha weighting
-        alpha_weight = target * self.alpha + (1 - target) * (1 - self.alpha)
+        alpha_weight =  self.alpha * modulating_factor
 
         # Calculate focal loss
-        focal_loss = alpha_weight * modulating_factor * cross_entropy_loss
+        focal_loss = alpha_weight * cross_entropy_loss
 
         if self.reduction == 'mean':
             return torch.mean(focal_loss)
@@ -286,7 +287,7 @@ import random
 n_splits = 5
 seeds = [42, 123, 2023, 7, 99]
 num_epochs = 100 #Change this to 100 for more accuracy? it was 50
-batch_size = 64
+batch_size = 512
 
 # Store results
 cv_results = []
